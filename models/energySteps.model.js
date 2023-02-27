@@ -2,7 +2,7 @@ const { Schema, model } = require("mongoose");
 
 const energySchema = new Schema(
     {
-        project: { type: String, default: "energy finance" },
+        project: { type: String, default: "black pg" },
         isSalesExperience: { type: Boolean, default: false },
         isGradguate: { type: Boolean, default: false },
         perspective: { type: String },
