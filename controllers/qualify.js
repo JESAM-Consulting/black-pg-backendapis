@@ -101,16 +101,16 @@ module.exports = {
 
     getFileData: async (req, res) => {
         try {
-            let { id, page, limit, search } = req.query;
+            let { id, page, limit, search, ...query } = req.body;
             page = parseInt(page) || 1;
             limit = parseInt(limit) || 10;
 
-            let criteria = {}
-            let searchData = {}
-            if (id) criteria._id = id;
+            // let criteria = {}
+            // let searchData = {}
+            // if (id) criteria._id = id;
 
             if (search) {
-                searchData = {
+                query = {
                     $or: [
                         { fname: { $regex: search, $options: "i" } },
                         { lname: { $regex: search, $options: "i" } },
@@ -120,16 +120,16 @@ module.exports = {
                 }
             }
 
-            criteria = { ...criteria, ...searchData };
+            // criteria = { ...criteria, ...searchData };
 
 
             let data = await qualifyModel
-                .find(criteria)
+                .find(query)
                 .skip((page - 1) * limit)
                 .limit(limit)
                 .sort({ createdAt: -1 });
 
-            let total = await qualifyModel.countDocuments(criteria);
+            let total = await qualifyModel.countDocuments(query);
 
             return res
                 .status(200)
