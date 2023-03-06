@@ -21,5 +21,13 @@
     "USER": "user",
     "JESAM": "admin@jesamconsulting.com",
     "JESAM_ADMIN": "admin@energyfinance.de"
+  },
+
+  "COLOR": {
+    "PINK": "pink",
+    "GREEN": "green",
+    "ORANGE": "orange",
+    "BLACK": "black",
+    "RED": "red"
   }
 }

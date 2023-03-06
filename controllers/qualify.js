@@ -2,7 +2,7 @@ const qualifyModel = require("../models/qualify");
 const messages = require("../json/message.json");
 const csv = require('csvtojson');
 const fs = require('fs');
-const { USER_TYPE } = require("../json/enums.json");
+const { USER_TYPE, COLOR } = require("../json/enums.json");
 
 //create role
 module.exports = {
@@ -101,66 +101,89 @@ module.exports = {
 
     getFileData: async (req, res) => {
         try {
-            let { id, page, limit, search, appointmentDate, appointmentTime, sms, contactedBy, contactedOn, contactedAgain, lastContact, reached, makeAppointment, usefulInformation, emailFailed, nichtGeeignet, pv } = req.body;
+            let { id, page, limit, sortBy, sortOrder, startDate, endDate, search, color } = req.body;
             page = parseInt(page) || 1;
-            limit = parseInt(limit) || 10;
-
+            limit = parseInt(limit) || 100;
+            sortBy = sortBy || "createdAt";
+            sortOrder = sortOrder || -1;
             let criteria = {}
             let searchData = {}
             if (id) criteria._id = id;
 
-            if (pv === true) criteria.pv = pv;
+            if (startDate && endDate) {
+                startDate = new Date(startDate)
+                endDate = new Date(endDate).setHours(23, 59, 59)
 
-            if (appointmentDate && appointmentTime) {
-                criteria = {
-                    ...criteria,
-                    appointmentDate,
-                    appointmentTime
-                }
+                criteria.createdAt = { $gte: startDate, $lte: endDate }
             }
 
-            if (sms === true || contactedBy || contactedOn || contactedAgain || lastContact || reached === true || makeAppointment || usefulInformation) {
+            if (color === COLOR.BLACK) {
                 criteria = {
-                    ...criteria,
-                    sms,
-                    contactedBy,
-                    contactedOn,
-                    contactedAgain,
-                    lastContact,
-                    reached,
-                    makeAppointment,
-                    usefulInformation
-                }
-            }
-
-            if (nichtGeeignet === true || emailFailed === true) {
-                criteria = {
-                    ...criteria,
-                    emailFailed,
-                    nichtGeeignet
-                }
-            }
-
-            if (search) {
-                criteria = {
-                    ...criteria,
                     $or: [
-                        { fname: { $regex: search, $options: "i" } },
-                        { lname: { $regex: search, $options: "i" } },
-                        { email: { $regex: search, $options: "i" } },
-                        { phone: { $regex: search, $options: "i" } },
+                        { emailFailed: true },
+                        { nichtGeeignet: true }
+                    ]
+                }
+            } else if (color === COLOR.RED) {
+                criteria = {
+                    $and: [
+                        { sms: null },
+                        { contactedBy: null },
+                        { contactedOn: null },
+                        { contactedAgain: null },
+                        { lastContact: null },
+                        { emailFailed: null },
+                        { appointmentDate: null },
+                        { appointmentTime: null },
+                        { reached: null },
+                        { makeAppointment: null },
+                        { usefulInformation: null },
+                        { nichtGeeignet: null },
+                        { pv: null },
+                    ]
+                }
+            } else if (color === COLOR.GREEN) {
+                criteria = {
+                    $or: [
+                        { appointmentDate: { $ne: null } },
+                        { appointmentTime: { $ne: null } }
+                    ]
+                }
+            } else if (color === COLOR.ORANGE) {
+                criteria = {
+                    $or: [
+                        { sms: true },
+                        { reached: true },
+                        { contactedBy: { $ne: null } },
+                        { contactedOn: { $ne: null } },
+                        { contactedAgain: { $ne: null } },
+                        { lastContact: { $ne: null } },
+                        { makeAppointment: { $ne: null } },
+                        { usefulInformation: { $ne: null } }
                     ]
                 }
             }
 
-            criteria = { ...criteria, ...searchData };
+            if (color === COLOR.PINK) {
+                criteria.pv = true;
+            }
 
+            search ? searchData = {
+                $or: [
+                    { fname: { $regex: search, $options: "i" } },
+                    { lname: { $regex: search, $options: "i" } },
+                    { email: { $regex: search, $options: "i" } },
+                    { phone: { $regex: search, $options: "i" } },
+                ]
+            } : ""
+
+            criteria = { ...criteria, ...searchData };
 
             let data = await qualifyModel
                 .find(criteria)
                 .skip((page - 1) * limit)
                 .limit(limit)
-                .sort({ createdAt: -1 });
+                .sort({ [sortBy]: sortOrder })
 
             let total = await qualifyModel.countDocuments(criteria);
 
