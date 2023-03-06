@@ -101,16 +101,49 @@ module.exports = {
 
     getFileData: async (req, res) => {
         try {
-            let { id, page, limit, search, ...query } = req.body;
+            let { id, page, limit, search, appointmentDate, appointmentTime, sms, contactedBy, contactedOn, contactedAgain, lastContact, reached, makeAppointment, usefulInformation, emailFailed, nichtGeeignet, pv } = req.body;
             page = parseInt(page) || 1;
             limit = parseInt(limit) || 10;
 
-            // let criteria = {}
-            // let searchData = {}
-            // if (id) criteria._id = id;
+            let criteria = {}
+            let searchData = {}
+            if (id) criteria._id = id;
+
+            if (pv === true) criteria.pv = pv;
+
+            if (appointmentDate && appointmentTime) {
+                criteria = {
+                    ...criteria,
+                    appointmentDate,
+                    appointmentTime
+                }
+            }
+
+            if (sms === true || contactedBy || contactedOn || contactedAgain || lastContact || reached === true || makeAppointment || usefulInformation) {
+                criteria = {
+                    ...criteria,
+                    sms,
+                    contactedBy,
+                    contactedOn,
+                    contactedAgain,
+                    lastContact,
+                    reached,
+                    makeAppointment,
+                    usefulInformation
+                }
+            }
+
+            if (nichtGeeignet === true || emailFailed === true) {
+                criteria = {
+                    ...criteria,
+                    emailFailed,
+                    nichtGeeignet
+                }
+            }
 
             if (search) {
-                query = {
+                criteria = {
+                    ...criteria,
                     $or: [
                         { fname: { $regex: search, $options: "i" } },
                         { lname: { $regex: search, $options: "i" } },
@@ -120,16 +153,16 @@ module.exports = {
                 }
             }
 
-            // criteria = { ...criteria, ...searchData };
+            criteria = { ...criteria, ...searchData };
 
 
             let data = await qualifyModel
-                .find(query)
+                .find(criteria)
                 .skip((page - 1) * limit)
                 .limit(limit)
                 .sort({ createdAt: -1 });
 
-            let total = await qualifyModel.countDocuments(query);
+            let total = await qualifyModel.countDocuments(criteria);
 
             return res
                 .status(200)
