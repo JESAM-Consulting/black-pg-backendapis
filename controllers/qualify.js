@@ -154,6 +154,8 @@ module.exports = {
                     $and: [
                         { appointmentDate: { $eq: null } },
                         { appointmentTime: { $eq: null } },
+                        { emailFailed: { $eq: null } },
+                        { nichtGeeignet: { $eq: null } },
                         {
                             $or: [
                                 { sms: true },
