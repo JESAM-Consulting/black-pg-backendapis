@@ -151,15 +151,21 @@ module.exports = {
                 }
             } else if (color === COLOR.ORANGE) {
                 criteria = {
-                    $or: [
-                        { sms: true },
-                        { reached: true },
-                        { contactedBy: { $ne: null } },
-                        { contactedOn: { $ne: null } },
-                        { contactedAgain: { $ne: null } },
-                        { lastContact: { $ne: null } },
-                        { makeAppointment: { $ne: null } },
-                        { usefulInformation: { $ne: null } }
+                    $and: [
+                        { appointmentDate: { $eq: null } },
+                        { appointmentTime: { $eq: null } },
+                        {
+                            $or: [
+                                { sms: true },
+                                { reached: true },
+                                { contactedBy: { $ne: null } },
+                                { contactedOn: { $ne: null } },
+                                { contactedAgain: { $ne: null } },
+                                { lastContact: { $ne: null } },
+                                { makeAppointment: { $ne: null } },
+                                { usefulInformation: { $ne: null } },
+                            ]
+                        }
                     ]
                 }
             }
