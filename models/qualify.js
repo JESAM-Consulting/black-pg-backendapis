@@ -39,6 +39,7 @@ const qualifySchema = new mongoose.Schema(
         nichtGeeignet: { type: Boolean, default: null },
         pv: { type: Boolean, default: null },
         color: { type: String, enum: { values: [...Object.values(COLOR)], message: "Invalid color" }, default: COLOR.RED },
+        starterSeminar: { type: Boolean, default: false },
     },
     { timestamps: true, versionKey: false, autoCreate: true }
 );
