@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { COLOR } = require("../json/enums.json")
 
 // Create a schema for Database
 
@@ -37,6 +38,7 @@ const qualifySchema = new mongoose.Schema(
         usefulInformation: { type: String, default: null },
         nichtGeeignet: { type: Boolean, default: null },
         pv: { type: Boolean, default: null },
+        color: { type: String, enum: { values: [...Object.values(COLOR)], message: "Invalid color" }, default: COLOR.RED },
     },
     { timestamps: true, versionKey: false, autoCreate: true }
 );

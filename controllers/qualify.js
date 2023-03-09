@@ -117,64 +117,7 @@ module.exports = {
                 criteria.createdAt = { $gte: startDate, $lte: endDate }
             }
 
-            if (color === COLOR.BLACK) {
-                criteria = {
-                    $or: [
-                        { emailFailed: true },
-                        { nichtGeeignet: true }
-                    ]
-                }
-            } else if (color === COLOR.RED) {
-                criteria = {
-                    $and: [
-                        { sms: null },
-                        { contactedBy: null },
-                        { contactedOn: null },
-                        { contactedAgain: null },
-                        { lastContact: null },
-                        { emailFailed: null },
-                        { appointmentDate: null },
-                        { appointmentTime: null },
-                        { reached: null },
-                        { makeAppointment: null },
-                        { usefulInformation: null },
-                        { nichtGeeignet: null },
-                        { pv: null },
-                    ]
-                }
-            } else if (color === COLOR.GREEN) {
-                criteria = {
-                    $or: [
-                        { appointmentDate: { $ne: null } },
-                        { appointmentTime: { $ne: null } }
-                    ]
-                }
-            } else if (color === COLOR.ORANGE) {
-                criteria = {
-                    $and: [
-                        { appointmentDate: { $eq: null } },
-                        { appointmentTime: { $eq: null } },
-                        { emailFailed: { $eq: null } },
-                        { nichtGeeignet: { $eq: null } },
-                        {
-                            $or: [
-                                { sms: true },
-                                { reached: true },
-                                { contactedBy: { $ne: null } },
-                                { contactedOn: { $ne: null } },
-                                { contactedAgain: { $ne: null } },
-                                { lastContact: { $ne: null } },
-                                { makeAppointment: { $ne: null } },
-                                { usefulInformation: { $ne: null } },
-                            ]
-                        }
-                    ]
-                }
-            }
-
-            if (color === COLOR.PINK) {
-                criteria.pv = true;
-            }
+            if (color) criteria.color = color;
 
             search ? searchData = {
                 $or: [
