@@ -3,6 +3,7 @@ const messages = require("../json/message.json");
 const csv = require('csvtojson');
 const fs = require('fs');
 const { USER_TYPE, COLOR } = require("../json/enums.json");
+const { handleStatusColor } = require("../script");
 
 //create role
 module.exports = {
@@ -136,6 +137,8 @@ module.exports = {
                 .limit(limit)
                 .sort({ [sortBy]: sortOrder })
 
+            // await handleStatusColor(data)
+
             let total = await qualifyModel.countDocuments(criteria);
 
             return res
@@ -183,7 +186,10 @@ module.exports = {
                 },
             };
 
-            await qualifyModel.findByIdAndUpdate(id, body, { new: true });
+            let updateQualify = await qualifyModel.findByIdAndUpdate(id, body, { new: true });
+            if (updateQualify) {
+                await handleStatusColor({ data: [updateQualify], models: qualifyModel })
+            }
             return res
                 .status(200)
                 .send({ message: messages.DATA_UPDATED });
