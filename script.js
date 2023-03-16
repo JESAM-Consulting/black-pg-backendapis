@@ -1,40 +1,38 @@
-const handleStatusColor = async ({data, models}) => {
-
+const handleStatusColor = async ({ data, models }) => {
     for await (let teamData of data) {
-        if (teamData.pv === true) {
-            await models.findOneAndUpdate({ _id: teamData._id }, { color: "pink" })
-            console.log("pink")
+        await models.findOneAndUpdate({ _id: teamData._id }, { color: "red" }, { new: true });
+        if (teamData.starterSeminar === true) {
+            await models.findOneAndUpdate({ _id: teamData._id }, { color: "pink" }, { new: true })
         } else {
             if (
                 (teamData?.nichtGeeignet === false || teamData?.nichtGeeignet === null) &&
                 teamData?.emailFailed === null
             ) {
-
                 if (
-                    !teamData.pv &&
-                    !teamData.sms &&
+                    (!teamData.starterSeminar || teamData?.starterSeminar === false) &&
+                    (!teamData.sms || teamData.sms === false) &&
                     !teamData?.contactedBy &&
-                    !teamData?.contactedOn &&
-                    !teamData?.contactedAgain &&
-                    !teamData?.lastContact &&
-                    !teamData?.reached &&
+                    (!teamData.contactedOn || teamData.contactedOn === "Invalid date") &&
+                    (!teamData?.contactedAgain || teamData.contactedAgain === "Invalid date") &&
+                    (!teamData?.lastContact || teamData?.lastContact === "Invalid date") &&
+                    (!teamData?.reached || teamData?.reached === false) &&
                     !teamData?.makeAppointment &&
                     !teamData?.usefulInformation &&
-                    !teamData?.appointmentDate &&
+                    (!teamData?.appointmentDate || teamData?.appointmentDate === "Invalid date") &&
                     !teamData?.appointmentTime
                 ) {
-                    await models.findOneAndUpdate({ _id: teamData._id }, { color: "red" })
-                    console.log("red")
+                    console.log("first");
+                    await models.findOneAndUpdate({ _id: teamData._id }, { color: "red" }, { new: true })
                 } else {
                     if (
-                        teamData.appointmentDate ||
-                        teamData.appointmentTime
+                        (teamData.appointmentDate && teamData.appointmentDate !== "Invalid date") ||
+                        (teamData.appointmentTime && teamData.appointmentTime !== null)
                     ) {
-                        await models.findOneAndUpdate({ _id: teamData._id }, { color: "green" })
-                        console.log("green")
+                        console.log("second");
+                        await models.findOneAndUpdate({ _id: teamData._id }, { color: "green" }, { new: true })
                     } else {
-                        await models.findOneAndUpdate({ _id: teamData._id }, { color: "orange" })
-                        console.log("black")
+                        console.log("third");
+                        await models.findOneAndUpdate({ _id: teamData._id }, { color: "orange" }, { new: true })
                     }
                 }
             } else {
@@ -43,8 +41,8 @@ const handleStatusColor = async ({data, models}) => {
                     teamData.emailFailed === true ||
                     teamData.emailFailed === null
                 ) {
-                    await models.findOneAndUpdate({ _id: teamData._id }, { color: "black" })
-                    console.log("black")
+                    console.log("fifth");
+                    await models.findOneAndUpdate({ _id: teamData._id }, { color: "black" }, { new: true })
                 } else {
                     if (
                         (teamData.appointmentDate !== "Invalid date" &&
@@ -52,8 +50,8 @@ const handleStatusColor = async ({data, models}) => {
                             teamData?.appointmentDate !== null) ||
                         teamData?.appointmentTime
                     ) {
-                        await models.findOneAndUpdate({ _id: teamData._id }, { color: "green" })
-                        console.log("green")
+                        console.log("sixth");
+                        await models.findOneAndUpdate({ _id: teamData._id }, { color: "green" }, { new: true })
                     } else {
                         if (
                             teamData.sms ||
@@ -71,18 +69,17 @@ const handleStatusColor = async ({data, models}) => {
                             teamData.makeAppointment ||
                             teamData.usefulInformation
                         ) {
-                            await models.findOneAndUpdate({ _id: teamData._id }, { color: "orange" })
-                            console.log("orange")
+                            console.log("seventh");
+                            await models.findOneAndUpdate({ _id: teamData._id }, { color: "orange" }, { new: true })
                         } else {
-                            await models.findOneAndUpdate({ _id: teamData._id }, { color: "red" })
-                            console.log("red")
+                            console.log("eigth");
+                            await models.findOneAndUpdate({ _id: teamData._id }, { color: "red" }, { new: true })
                         }
                     }
                 }
             }
         }
     }
-
 };
 
 module.exports = { handleStatusColor };

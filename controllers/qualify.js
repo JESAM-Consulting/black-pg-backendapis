@@ -137,8 +137,6 @@ module.exports = {
                 .limit(limit)
                 .sort({ [sortBy]: sortOrder })
 
-            // await handleStatusColor(data)
-
             let total = await qualifyModel.countDocuments(criteria);
 
             return res

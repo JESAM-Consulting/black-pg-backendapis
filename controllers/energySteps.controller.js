@@ -36,11 +36,12 @@ module.exports = exports = {
       const limit = parseInt(req.query.limit) || 10;
 
       let criteria = { isActive: true }
+      let searchData = {}
       if (id) criteria._id = id
       if (project) criteria.project = project
 
       if (search) {
-        criteria = {
+        searchData = {
           $or: [
             { firstName: { $regex: search, $options: "i" } },
             { lastName: { $regex: search, $options: "i" } },
@@ -56,6 +57,8 @@ module.exports = exports = {
 
         criteria.createdAt = { $gte: startDate, $lte: endDate }
       }
+
+      criteria = { ...criteria, ...searchData }
 
       const reasons = await energyModel
         .find(criteria)
