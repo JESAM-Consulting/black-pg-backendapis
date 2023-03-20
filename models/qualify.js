@@ -20,6 +20,7 @@ const qualifySchema = new mongoose.Schema(
         isEmployed: { type: String },
         salesExperience: { type: String },
         answer: { type: String },
+        description: { type: String },
         fname: { type: String },
         lname: { type: String },
         email: { type: String },
