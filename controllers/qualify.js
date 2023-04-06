@@ -87,7 +87,7 @@ module.exports = {
                 await qualifyModel.insertMany(data);
                 await fs.unlink(req.file.path, (err) => {
                     if (err) console.log(err);
-                    return apiResponse.OK({ res, message: messages.SUCCESS });
+                    return res.status(201).send({ message: messages.INSERTED })
                 });
             });
 
