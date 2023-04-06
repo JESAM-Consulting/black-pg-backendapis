@@ -18,10 +18,15 @@ module.exports = {
                 .status(400)
                 .send({ message: messages.NOT_FOUND });
 
-            csv()
-                .fromFile(req.file.path)
-                .then((jsonObj) => {
-                    let i = Object.keys(jsonObj[0])
+            let results = [];
+            csv().fromFile(req.file.path).then(async (jsonObj) => {
+                for await (const i of jsonObj) {
+                    const findExistPhone = await qualifyModel.findOne({ $or: [{ phone: i.phone }, { email: i.email }] });
+                    if (!findExistPhone) {
+                        results.push(i);
+                    }
+
+                    let fields = Object.keys(jsonObj[0])
                     let validateKeys = [
                         'id',
                         'created_time',
@@ -35,64 +40,56 @@ module.exports = {
                         'form_name',
                         'is_organic',
                         'platform',
-                        'bist_du_derzeit_berufstätig?',
+                        'bist_du_bereit,_als_selbststÃ¤ndiger_energieberater_bei_der_energy_&_finance_durchzustarten_und_durchschnittlich_108000_euro_pro_jahr_zu_verdienen?',
+                        'bist_du_derzeit_berufstÃ¤tig?',
                         'wie_viel_vertriebserfahrung_hast_du?',
-                        'bitte_wähle_die_auf_dich_zutreffende_antwort_aus:_ich_bin_...',
-                        'beschreibe_in_wenigen_sätzen,_warum_du_energy_guide_der_energy_&_finance_werden_möchtest.',
+                        'bist_du_in_besitz_eines_fÃ¼hrerscheins_(klasse_b)?',
+                        'bitte_wÃ¤hle_die_auf_dich_zutreffende_antwort_aus:_ich_bin_',
+                        'beschreibe_in_wenigen_sÃ¤tzen,_warum_du_energy_guide_der_energy_&_finance_werden_mÃ¶chtest.',
                         'first_name',
                         'last_name',
                         'phone_number',
                         'email',
-                        'state'
-                    ]
-                    if (!i.every((v, i) => v === validateKeys[i])) {
-                        for (let j = 0; j < i.length; j++) {
-                            if (i[j] !== validateKeys[j]) {
-                                console.log(123);
-                                return res.status(400).json({ message: messages.invalidFileFormat + i[j] })
-                            }
-                        }
-                    }
-                    Promise.all(jsonObj.map(async (x) => {
+                        'state']
 
-                        await qualifyModel.insertMany([
-                            {
-                                id: x['id'],
-                                createdTime: x['created_time'],
-                                adId: x['ad_id'],
-                                adName: x['ad_name'],
-                                adsetId: x['adset_id'],
-                                adsetName: x['adset_name'],
-                                campaignId: x['campaign_id'],
-                                campaignName: x['campaign_name'],
-                                formId: x['form_id'],
-                                formName: x['form_name'],
-                                isOrganic: x['is_organic'],
-                                plateform: x['plateform'],
-                                isEmployed: x['bist_du_derzeit_berufstätig?'],
-                                salesExperience: x['wie_viel_vertriebserfahrung_hast_du?'],
-                                answer: x['bitte_wähle_die_auf_dich_zutreffende_antwort_aus:_ich_bin_...'],
-                                description: x['beschreibe_in_wenigen_sätzen,_warum_du_energy_guide_der_energy_&_finance_werden_möchtest.'],
-                                fname: x['first_name'],
-                                lname: x['last_name'],
-                                email: x['email'],
-                                phone: x['phone_number'],
-                                state: x['state'],
-                            }
-                        ])
-                    })).then(() => {
-                        fs.unlinkSync(req.file.path, (err) => {
-                            if (err) {
-                                console.log("err", err)
-                                return res.status(400).json({ message: err.message })
-                            }
-                        })
-                        console.log("File deleted!")
-                    })
-                    return res
-                        .status(200)
-                        .send({ message: messages.INSERTED, });
-                })
+                    const missingField = fields.find(item => !validateKeys.includes(item))
+                    if (missingField) return apiResponse.BAD_REQUEST({ res, message: messages.INVALID_DATA + missingField });
+                }
+
+                let data = [];
+                for (let i = 0; i < results.length; i++) {
+                    let obj = {};
+                    obj.id = results[i].id;
+                    obj.createdTime = results[i].created_time;
+                    obj.adId = results[i].ad_id;
+                    obj.adName = results[i].ad_name;
+                    obj.adsetId = results[i].adset_id;
+                    obj.adsetName = results[i].adset_name;
+                    obj.campaignId = results[i].campaign_id;
+                    obj.campaignName = results[i].campaign_name;
+                    obj.formId = results[i].form_id;
+                    obj.formName = results[i].form_name;
+                    obj.isOrganic = results[i].is_organic;
+                    obj.plateform = results[i].platform;
+                    obj.readyToEarn = results[i]['bist_du_bereit,_als_selbststÃ¤ndiger_energieberater_bei_der_energy_&_finance_durchzustarten_und_durchschnittlich_108000_euro_pro_jahr_zu_verdienen?']
+                    obj.isEmployed = results[i]['bist_du_derzeit_berufstÃ¤tig?'];
+                    obj.salesExperience = results[i]['wie_viel_vertriebserfahrung_hast_du?'];
+                    obj.hasDrivingLicense = results[i]['bist_du_in_besitz_eines_fÃ¼hrerscheins_(klasse_b)?'];
+                    obj.answer = results[i]['bitte_wähle_die_auf_dich_zutreffende_antwort_aus:_ich_bin_?'];
+                    obj.description = results[i]['beschreibe_in_wenigen_sÃ¤tzen,_warum_du_energy_guide_der_energy_&_finance_werden_mÃ¶chtest.'];
+                    obj.fname = results[i].first_name;
+                    obj.lname = results[i].last_name;
+                    obj.email = results[i].phone_number;
+                    obj.phone = results[i].email;
+                    obj.state = results[i].state;
+                    data.push(obj);
+                }
+                await qualifyModel.insertMany(data);
+                await fs.unlink(req.file.path, (err) => {
+                    if (err) console.log(err);
+                    return apiResponse.OK({ res, message: messages.SUCCESS });
+                });
+            });
 
         } catch (error) {
             console.log("err", error)
